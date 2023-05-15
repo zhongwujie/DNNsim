@@ -360,7 +360,7 @@ namespace sys {
         bool scalar = false;
         for (const auto &table : database) {
             if (table.var->getType() == stat_type::Scalar)
-                scalar = true;
+                scalar = true; // All of the data are the same?
         }
 
         if (scalar) {

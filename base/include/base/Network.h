@@ -77,8 +77,8 @@ namespace base {
         uint32_t getNetworkWidth() const { return data_width; }
 
         /**
-         * Get batch soze in the layer traces
-         * @return Btach
+         * Get batch size in the layer traces
+         * @return Batch
          */
         uint64_t getBatchSize() const {
             uint64_t max_batch_size = 0;

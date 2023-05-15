@@ -1,5 +1,6 @@
 
 #include <base/Array.h>
+// #define DEBUG 1
 
 namespace base {
 
@@ -524,7 +525,7 @@ namespace base {
         auto old_k = this->shape[1];
         auto X = this->shape[2];
         auto Y = this->shape[3];
-
+        // K must be bigger than old_k
 
         auto tmp_data4D = Array4D(N, Array3D(K, Array2D(X, Array1D(Y, 0))));
 
