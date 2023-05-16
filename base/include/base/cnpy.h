@@ -62,8 +62,8 @@ namespace base {
 
         template<typename T>
         std::vector<T> as_vec() const {
-            const T* p = data<T>();
-            return std::vector<T>(p, p+num_vals);
+            // const T* p = data<T>();
+            return std::vector<T>(data_holder->begin(), data_holder->end());
         }
 
         size_t num_bytes() const {

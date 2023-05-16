@@ -225,12 +225,14 @@ int main(int argc, char *argv[])
 				}
 				else if (simulate.data_type == "Fixed")
 				{
-					base::Network<uint16_t> network;
-					{
-						base::Network<float> tmp_network;
-						tmp_network = read<float>(simulate, QUIET);
-						network = tmp_network.fixed_point();
-					}
+					// base::Network<uint16_t> network;
+					// {
+					// 	base::Network<float> tmp_network;
+					// 	tmp_network = read<float>(simulate, QUIET);
+					// 	network = tmp_network.fixed_point();
+					// }
+          base::Network<uint16_t> network;
+          network = read<uint16_t>(simulate, QUIET);
 
 					for (const auto &experiment : simulate.experiments)
 					{

@@ -9,12 +9,12 @@ def generate_fc(m = 30, n = 20, k = 40):
   np.save(weight_path, weight)
 
 def generate_conv():
-  K = 2
-  R = 2
-  S = 2
-  C = 2
-  H = 2
-  W = 2
+  K = 8
+  R = 4
+  S = 4
+  C = 32
+  H = 4
+  W = 7
   N = 1
   weight_path = "./net_traces/cnn/wgt-layer0.npy"
   act_path = "./net_traces/cnn/act-layer0-0.npy"

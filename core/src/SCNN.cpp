@@ -34,8 +34,6 @@ namespace core
 			{
 				pe_stats.f_loop += 1;
 				std::vector<uint8_t> acc(2 * F * I, 0);
-				std::cout << "act.size: " << act.size() << std::endl;
-				std::cout << "wgt.size: " << wgt.size() << std::endl;
 				for (int ii = i; ii < std::min(i + (int)I, (int)act.size()); ii++)
 				{
 					for (int ff = f; ff < std::min(f + (int)F, (int)wgt.size()); ff++)
@@ -56,7 +54,6 @@ namespace core
 						{
 							int acc_idx = map_accumulator(k, w, h);
 							acc[acc_idx] += 1;
-							std::cout << "Useful results" << std::endl;
 							pe_stats.mults += 1;
 						}
 					}
@@ -116,7 +113,6 @@ namespace core
 					{
 						int sy = y % stride;
 						auto act_bits = act.get(n, ct + ck, x, y);
-            std::cout << act_bits << " ";
 						if (act_bits != 0)
 							act_queue[sx][sy].emplace_back(std::make_tuple(x, y));
 						dense_act_counter[sx][sy] += 1;
@@ -127,24 +123,21 @@ namespace core
 																																															std::vector<wgt_idxMap>((unsigned)stride, wgt_idxMap()));
 				std::vector<std::vector<uint32_t>> dense_wgt_counter = std::vector<std::vector<uint32_t>>(
 						(unsigned)stride, std::vector<uint32_t>((unsigned)stride, 0));
-				for (int r = 0; r < R; r++)
-				{
-					int sx = (r + padding) % stride;
-					for (int s = 0; s < S; s++)
-					{
-						int sy = (s + padding) % stride;
-						for (int k = k_begin; k < k_end; k++)
-						{
-							auto wgt_bits = wgt.get(k, ck, r, s);
+				for (int k = k_begin; k < k_end; k++){
+          for (int r = 0; r < R; r++)
+          {
+            int sx = (r + padding) % stride;
+            for (int s = 0; s < S; s++)
+            {
+              int sy = (s + padding) % stride;
+              auto wgt_bits = wgt.get(k, ck, r, s);
               // std::cout << wgt_bits << std::endl;
-							if (wgt_bits != 0)
-								wgt_queue[sx][sy].emplace_back(std::make_tuple(k, r, s));
-							dense_wgt_counter[sx][sy] += 1;
-						}
-					}
-				}
-        std::cout << "act_size: " << act_queue[0][0].size() << " wei_size: " << wgt_queue[0][0].size() <<
-          " x_begin: " << x_begin << " x_end: " << x_end << std::endl;
+              if (wgt_bits != 0)
+                wgt_queue[sx][sy].emplace_back(std::make_tuple(k, r, s));
+              dense_wgt_counter[sx][sy] += 1;
+            }
+          }
+        }
 
 				uint32_t PE_cycles = 0;
 				uint32_t PE_dense_cycles = 0;
