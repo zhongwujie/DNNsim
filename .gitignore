@@ -40,5 +40,6 @@ DNNsim
 # Models directory
 net_traces
 results
+test
 doc/html/*
 doc/latex/*
