@@ -14,8 +14,15 @@ namespace base {
     template <typename T>
     void Array<T>::set_values(const std::string &path) {
         base::NpyArray data_npy;
+        std::cout << "Type: " << typeid(T).name() << std::endl;
         base::npy_load(path, data_npy, this->shape);
+        std::cout << "data_npy: ";
+        for(auto i = 0; i < data_npy.num_bytes(); i++) std::cout << static_cast<int>((*data_npy.data_holder)[i]) << " ";
+        std::cout << std::endl;
         std::vector<T> flat_array = data_npy.as_vec<T>();
+        std::cout << "flat_array: ";
+        for(auto i = 0; i < flat_array.size(); i++) std::cout << flat_array[i] << " ";
+        std::cout << std::endl;
         auto min_value = *std::min_element(flat_array.begin(), flat_array.end());
         signed_data = min_value < 0;
         if (this->getDimensions() == 1) this->data1D = flat_array;

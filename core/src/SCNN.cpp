@@ -52,7 +52,6 @@ namespace core
 
 						int w = (x - r) / stride;
 						int h = (y - s) / stride;
-						std::cout << "Enter multiplication" << std::endl;
 						if (w >= 0 && w < W && h >= 0 && h < H)
 						{
 							int acc_idx = map_accumulator(k, w, h);
@@ -117,12 +116,13 @@ namespace core
 					{
 						int sy = y % stride;
 						auto act_bits = act.get(n, ct + ck, x, y);
-            std::cout << act_bits << std::endl;
+            std::cout << act_bits << " ";
 						if (act_bits != 0)
 							act_queue[sx][sy].emplace_back(std::make_tuple(x, y));
 						dense_act_counter[sx][sy] += 1;
 					}
 				}
+        std::cout << std::endl;
 				std::vector<std::vector<wgt_idxMap>> wgt_queue = std::vector<std::vector<wgt_idxMap>>((unsigned)stride,
 																																															std::vector<wgt_idxMap>((unsigned)stride, wgt_idxMap()));
 				std::vector<std::vector<uint32_t>> dense_wgt_counter = std::vector<std::vector<uint32_t>>(
@@ -136,6 +136,7 @@ namespace core
 						for (int k = k_begin; k < k_end; k++)
 						{
 							auto wgt_bits = wgt.get(k, ck, r, s);
+              // std::cout << wgt_bits << std::endl;
 							if (wgt_bits != 0)
 								wgt_queue[sx][sy].emplace_back(std::make_tuple(k, r, s));
 							dense_wgt_counter[sx][sy] += 1;

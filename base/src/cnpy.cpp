@@ -114,7 +114,11 @@ namespace base {
         size_t word_size;
         bool fortran_order;
         base::parse_npy_header(fp, word_size, shape, fortran_order);
+        std::cout << "word_size: " << word_size << std::endl;
+        for (auto i = 0; i < shape.size(); i++) std::cout << shape[i] << " ";
+        std::cout << std::endl;
         base::NpyArray arr(shape, word_size, fortran_order);
+        std::cout << "num_bytes: " << arr.num_bytes() << std::endl;
         size_t nread = fread(arr.data<char>(), 1, arr.num_bytes(), fp);
         if (nread != arr.num_bytes())
             throw std::runtime_error("load_the_npy_file: failed fread");
@@ -122,10 +126,13 @@ namespace base {
     }
 
     void npy_load(std::string fname, NpyArray &array, std::vector<size_t> &shape) {
-
+        std::cout << "fname: " << fname << std::endl;
         FILE *fp = fopen(fname.c_str(), "rb");
         if (!fp) throw std::runtime_error("npy_load: Unable to open file " + fname);
         array = load_the_npy_file(fp, shape);
+        std::cout << "array: ";
+        for(auto i = 0; i < array.data_holder->size(); i++) std::cout << static_cast<int>((*array.data_holder)[i]) << " ";
+        std::cout << std::endl;
         fclose(fp);
     }
 
