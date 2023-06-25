@@ -1,5 +1,5 @@
 simulate {
-	network: "test/cnn"
+	network: "benchmark/sparsity_0.80/conv"
 	model: "CSV"
 	data_type: "Fixed"
 	experiment {

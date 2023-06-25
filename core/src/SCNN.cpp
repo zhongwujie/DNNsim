@@ -118,7 +118,6 @@ namespace core
 						dense_act_counter[sx][sy] += 1;
 					}
 				}
-        std::cout << std::endl;
 				std::vector<std::vector<wgt_idxMap>> wgt_queue = std::vector<std::vector<wgt_idxMap>>((unsigned)stride,
 																																															std::vector<wgt_idxMap>((unsigned)stride, wgt_idxMap()));
 				std::vector<std::vector<uint32_t>> dense_wgt_counter = std::vector<std::vector<uint32_t>>(
@@ -171,7 +170,6 @@ namespace core
 						tile_stats.act_buff_reads += (uint64_t)(ceil(act_queue[sx][sy].size() / (double)I)) * I;
 					}
 				}
-        std::cout << "cycles: " << PE_cycles << std::endl;
 				wgt_size = PE_wgt_size;
 				tile_cycles.push_back(PE_cycles);
 				tile_dense_cycles.push_back(PE_dense_cycles);

@@ -38,8 +38,7 @@ cmake-*
 DNNsim
 
 # Models directory
-net_traces
+net_traces/benchmark
 results
-test
 doc/html/*
 doc/latex/*
