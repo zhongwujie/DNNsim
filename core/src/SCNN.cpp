@@ -7,11 +7,9 @@ namespace core
 	/* CYCLES */
 
 	template <typename T>
-	int SCNN<T>::map_accumulator(uint32_t k, uint32_t x, uint32_t y)
+	int SCNN<T>::map_accumulator(uint32_t k, uint32_t x, uint32_t y, uint32_t W, uint32_t H)
 	{
-		return ((((k & 4u) << 2u) ^ ((x & 2u) << 3u) ^ ((y & 2u) << 3u)) + ((x & 1u) << 3u) + ((y & 1u) << 2u) +
-						(k & 3u)) %
-					 BANKS;
+		return (k * W * H + y * W + x) % BANKS;
 	}
 
 	template <typename T>
@@ -52,7 +50,7 @@ namespace core
 						int h = (y - s) / stride;
 						if (w >= 0 && w < W && h >= 0 && h < H)
 						{
-							int acc_idx = map_accumulator(k, w, h);
+							int acc_idx = map_accumulator(k, w, h, W, H);
 							acc[acc_idx] += 1;
 							pe_stats.mults += 1;
 						}
@@ -122,7 +120,10 @@ namespace core
 																																															std::vector<wgt_idxMap>((unsigned)stride, wgt_idxMap()));
 				std::vector<std::vector<uint32_t>> dense_wgt_counter = std::vector<std::vector<uint32_t>>(
 						(unsigned)stride, std::vector<uint32_t>((unsigned)stride, 0));
-				for (int k = k_begin; k < k_end; k++){
+        if(ck == 0 && kc == 0 && pex == 0 && pey == 0){
+          std::cout << "weight data: ";
+        }
+        for (int k = k_begin; k < k_end; k++){
           for (int r = 0; r < R; r++)
           {
             int sx = (r + padding) % stride;
@@ -130,7 +131,12 @@ namespace core
             {
               int sy = (s + padding) % stride;
               auto wgt_bits = wgt.get(k, ck, r, s);
-              // std::cout << wgt_bits << std::endl;
+
+              if(ck == 0 && kc == 0 && pex == 0 && pey == 0){
+                short wb = wgt_bits;
+                std::cout << wb << " ";
+              }
+              
               if (wgt_bits != 0)
                 wgt_queue[sx][sy].emplace_back(std::make_tuple(k, r, s));
               dense_wgt_counter[sx][sy] += 1;
@@ -170,6 +176,25 @@ namespace core
 						tile_stats.act_buff_reads += (uint64_t)(ceil(act_queue[sx][sy].size() / (double)I)) * I;
 					}
 				}
+
+
+        if(ck == 0 && kc == 0 && pex == 0 && pey == 0){
+          std::cout << std::endl;
+          std::cout << " == data for pe 0 0 == " << std::endl;
+          std::cout << "act size: " << act_queue[0][0].size() << " weight size: "
+            << wgt_queue[0][0].size() << std::endl;
+          std::cout << "mults: " << PE_mults << std::endl;
+          std::cout << "weight data ";
+          for(auto i = 0; i < wgt_queue[0][0].size(); i++){
+            auto wgt_index = wgt_queue[0][0][i];
+            auto k = std::get<0>(wgt_index);
+						auto r = std::get<1>(wgt_index);
+						auto s = std::get<2>(wgt_index);
+            short wgt_val = wgt.get(k, ck, r, s);
+            std::cout << wgt_val << " ";
+          }
+          std::cout << std::endl;
+        }
 				wgt_size = PE_wgt_size;
 				tile_cycles.push_back(PE_cycles);
 				tile_dense_cycles.push_back(PE_dense_cycles);
@@ -213,20 +238,8 @@ namespace core
 		sys::Stats stats = sys::Stats(network.getNumLayers(), this->FAST_MODE ? 1 : network.getBatchSize(), filename);
 
 		auto cycles = stats.register_uint_t("cycles", 0, sys::AverageTotal);
-		auto dense_cycles = stats.register_uint_t("dense_cycles", 0, sys::AverageTotal);
 		auto mults = stats.register_uint_t("mults", 0, sys::AverageTotal);
-		auto idle_bricks = stats.register_uint_t("idle_bricks", 0, sys::AverageTotal);
-		auto idle_conflicts = stats.register_uint_t("idle_conflicts", 0, sys::AverageTotal);
-		auto idle_pe = stats.register_uint_t("idle_pe", 0, sys::AverageTotal);
-		auto idle_halo = stats.register_uint_t("idle_halo", 0, sys::AverageTotal);
-		auto total_mult_cycles = stats.register_uint_t("total_mult_cycles", 0, sys::AverageTotal);
-		auto halo_transfers = stats.register_uint_t("halo_transfers", 0, sys::AverageTotal);
-		auto weight_buff_reads = stats.register_uint_t("weight_buff_reads", 0, sys::AverageTotal);
-		auto act_buff_reads = stats.register_uint_t("act_buff_reads", 0, sys::AverageTotal);
-		auto accumulator_updates = stats.register_uint_t("accumulator_updates", 0, sys::AverageTotal);
-		auto i_loop = stats.register_uint_t("i_loop", 0, sys::AverageTotal);
-		auto f_loop = stats.register_uint_t("f_loop", 0, sys::AverageTotal);
-		auto offchip_weight_reads = stats.register_uint_t("offchip_weight_reads", 0, sys::AverageTotal);
+		auto f_loop = stats.register_uint_t("memory", 0, sys::AverageTotal);
 
 		for (auto layer_it = 0; layer_it < network.getNumLayers(); ++layer_it)
 		{
@@ -286,6 +299,7 @@ namespace core
 			auto H = (Y - S) / stride + 1;
 
 			auto groups = C / Ck;
+      assert(C == Ck);
 			auto Kg = K / groups;
 
 			auto W_round = (int)(ceil(W / (double)Wt)) * Wt;
@@ -293,6 +307,7 @@ namespace core
 			auto tw = W_round / Wt;
 			auto th = H_round / Ht;
 			auto Kc = (int)floor(OUT_ACC_SIZE / (double)(th * tw));
+      Kc = 1;
 
 			// Fix for MobileNet
 			if (Ck == 1 && C != 1)
@@ -303,23 +318,23 @@ namespace core
 			tw = (uint32_t)X / Wt;
 			th = (uint32_t)Y / Wt;
 
-			std::cout << "Kc: " << Kc << " tw: " << tw << " th: " << th << std::endl;
-			std::cout << "act shape: " << act_shape[0] << " " << act_shape[1] << " " << 
-				act_shape[2] << " " << act_shape[3] << std::endl;
-			std::cout << "weight shape: " << wgt_shape[0] << " " << wgt_shape[1] << " " << 
-				wgt_shape[2] << " " << wgt_shape[3] << std::endl;
-			std::cout << "K: " << K << " Ck: " << Ck << std::endl;
+      std::cout << "N: " << N << " C: " << C << " X: " << X << " Y: " << Y << " K: "
+        << K << " R: " << R << " S: " << S << " Kc: " << Kc << std::endl;
+			// std::cout << "act shape: " << act_shape[0] << " " << act_shape[1] << " " << 
+			// 	act_shape[2] << " " << act_shape[3] << std::endl;
+			// std::cout << "weight shape: " << wgt_shape[0] << " " << wgt_shape[1] << " " << 
+			// 	wgt_shape[2] << " " << wgt_shape[3] << std::endl;
 
 			act.grid_zero_pad(X, Y);
 
 			for (int n = 0; n < N; n++)
 			{
-				for (int kc = 0; kc < K; kc += Kc)
+				for (int kc = 0; kc < K; kc += Kc) // what if Kc is 0?
 				{
 
 					// Two towers alexnet
 					int ct = 0;
-					if (kc >= Kg)
+					if (kc >= Kg) // Kg == K
 						ct = (int)Ck;
 
 					// Fix for MobileNet
@@ -332,17 +347,8 @@ namespace core
 																							padding, act, wgt);
 
 						cycles->value[layer_it][n] += tile_stats.cycles;
-						dense_cycles->value[layer_it][n] += tile_stats.dense_cycles;
 						mults->value[layer_it][n] += tile_stats.mults;
-						idle_bricks->value[layer_it][n] += tile_stats.idle_bricks;
-						idle_conflicts->value[layer_it][n] += tile_stats.idle_conflicts;
-						idle_pe->value[layer_it][n] += tile_stats.idle_pe;
-						weight_buff_reads->value[layer_it][n] += tile_stats.weight_buff_reads;
-						act_buff_reads->value[layer_it][n] += tile_stats.act_buff_reads;
-						accumulator_updates->value[layer_it][n] += tile_stats.accumulator_updates;
-						i_loop->value[layer_it][n] += tile_stats.i_loop;
 						f_loop->value[layer_it][n] += tile_stats.f_loop;
-						offchip_weight_reads->value[layer_it][n] += tile_stats.offchip_weight_reads;
 					}
 
 					// resolve halos
@@ -368,18 +374,13 @@ namespace core
 							}
 						}
 					}
-					std::cout << "max_psum: " << max_psum << std::endl;
+					// std::cout << "max_psum: " << max_psum << std::endl;
 					auto max_psums = max_psum * std::min(Kc, (int)K - kc);
 
-					std::cout << "max_psums: " << max_psums << std::endl;
+					// std::cout << "max_psums: " << max_psums << std::endl;
 
 					cycles->value[layer_it][n] += max_psums;
-					dense_cycles->value[layer_it][n] += max_psums;
-					idle_halo->value[layer_it][n] += max_psums * Ht * Wt * I * F;
-					halo_transfers->value[layer_it][n] += tmp_halo_transfers;
 				}
-				total_mult_cycles->value[layer_it][n] = mults->value[layer_it][n] + idle_bricks->value[layer_it][n] +
-																								idle_conflicts->value[layer_it][n] + idle_pe->value[layer_it][n] + idle_halo->value[layer_it][n];
 			}
 		}
 

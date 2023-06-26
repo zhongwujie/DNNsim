@@ -51,7 +51,7 @@ namespace core {
          * @param y         W position
          * @return          Accumulator bank index
          */
-        int map_accumulator(uint32_t k, uint32_t x, uint32_t y);
+        int map_accumulator(uint32_t k, uint32_t x, uint32_t y, uint32_t W, uint32_t H);
 
         struct PE_stats {
             uint32_t cycles = 0;

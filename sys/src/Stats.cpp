@@ -351,6 +351,7 @@ namespace sys {
                 throw std::runtime_error("Error creating folder results/" + network_name);
         }
 
+        std::string folder_path = "results/" + network_name;
         std::string path = "results/" + network_name + "/" + filename + ".csv";
         o_file.open (path);
 

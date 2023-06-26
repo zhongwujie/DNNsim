@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
 		bool CHECK = options.count("check_values") == 0 ? false : options["check_values"].as<bool>();
 		std::string batch_path = options["batch"].as<std::string>();
 		sys::Batch batch = sys::Batch(batch_path);
-		std::cout << "batch_path: " << batch_path << std::endl;
+		// std::cout << "batch_path: " << batch_path << std::endl;
 		batch.read_batch();
 
 		for (const auto &simulate : batch.getSimulations())
@@ -225,14 +225,14 @@ int main(int argc, char *argv[])
 				}
 				else if (simulate.data_type == "Fixed")
 				{
-					// base::Network<uint16_t> network;
-					// {
-					// 	base::Network<float> tmp_network;
-					// 	tmp_network = read<float>(simulate, QUIET);
-					// 	network = tmp_network.fixed_point();
-					// }
-          base::Network<uint16_t> network;
-          network = read<uint16_t>(simulate, QUIET);
+					base::Network<uint16_t> network;
+					{
+						base::Network<float> tmp_network;
+						tmp_network = read<float>(simulate, QUIET);
+						network = tmp_network.fixed_point();
+					}
+          // base::Network<uint16_t> network;
+          // network = read<uint16_t>(simulate, QUIET);
 
 					for (const auto &experiment : simulate.experiments)
 					{
